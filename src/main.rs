@@ -18,7 +18,7 @@ const XKCD_URL: &str = "https://xkcd.com";
 
 // save me from myself
 fn commands() -> Vec<Command<Data, Error>> {
-    vec![ping(), xkcd()]
+    vec![command::ping(), command::xkcd()]
 }
 
 #[tokio::main]

@@ -8,6 +8,7 @@ pub struct Comic {
     pub num: u32,
     pub title: String,
     pub alt: String,
+    pub img: String,
 
     // why is it like this?
     // I don't know, ask Randall
@@ -35,15 +36,26 @@ impl Comic {
         .unwrap()
     }
 
-    pub async fn get(
-        num: u32,
+    async fn get(
         client: &reqwest::Client,
+        json_url: String,
     ) -> Result<Comic, Box<dyn std::error::Error>> {
         Ok(client
-            .get(format!("{}/{}/info.0.json", XKCD_URL, num))
+            .get(format!("{}/info.0.json", json_url))
             .send()
             .await?
             .json::<Comic>()
             .await?)
+    }
+
+    pub async fn get_num(
+        client: &reqwest::Client,
+        num: u32,
+    ) -> Result<Comic, Box<dyn std::error::Error>> {
+        Comic::get(client, format!("{}/{}", XKCD_URL, num)).await
+    }
+
+    pub async fn get_latest(client: &reqwest::Client) -> Result<Comic, Box<dyn std::error::Error>> {
+        Comic::get(client, XKCD_URL.into()).await
     }
 }
