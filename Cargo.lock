@@ -1968,6 +1968,7 @@ version = "0.1.0"
 dependencies = [
  "datetime",
  "poise",
+ "rand",
  "reqwest",
  "serde",
  "tokio",

@@ -1,3 +1,4 @@
+use datetime::ISO;
 use poise::builtins::register_in_guild;
 use poise::{serenity_prelude as serenity, Command};
 
@@ -49,4 +50,24 @@ async fn main() {
         });
 
     framework.run().await.unwrap();
+}
+
+async fn send_comic_embed(ctx: Context<'_>, comic: &Comic) {
+    ctx.send(|rep| {
+        rep.embed(|embed| {
+            embed.title(&comic.title);
+            embed.description(format!(
+                "`#{}` - {}",
+                &comic.num,
+                comic.get_date().iso().to_string()
+            ));
+            embed.image(&comic.img);
+            embed.footer(|footer| {
+                footer.text(&comic.alt);
+                footer
+            })
+        })
+    })
+    .await
+    .expect("idek anymore");
 }

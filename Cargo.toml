@@ -11,3 +11,4 @@ tokio = {"version" = "1.28.2", features = ["rt-multi-thread"]}
 serde = { version = "1.0.163", features = ["derive"] }
 reqwest = { version = "0.11.17", features = ["json"] }
 datetime = "0.5.2"
+rand = "0.8.5"
