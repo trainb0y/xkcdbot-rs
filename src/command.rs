@@ -7,10 +7,24 @@ use rand::Rng;
 use crate::comic::Comic;
 use crate::{send_comic_embed, Context, Error};
 
-/// Is the bot alive?
+/// Is the bot even alive?
 #[poise::command(slash_command)]
 pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
     ctx.say("Pong!").await?;
+    Ok(())
+}
+
+/// Help and documentation
+#[poise::command(slash_command)]
+pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say("todo").await?;
+    Ok(())
+}
+
+/// Bug reporting, source code, and more
+#[poise::command(slash_command)]
+pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
+    ctx.say("todo").await?;
     Ok(())
 }
 
