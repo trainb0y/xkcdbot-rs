@@ -1,6 +1,6 @@
 use crate::comic::Comic;
 use crate::{Data, Error};
-use poise::serenity_prelude::{ComponentType, Interaction};
+use poise::serenity_prelude::{ComponentType, CreateComponents, Interaction};
 use poise::{serenity_prelude, Event};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
@@ -45,9 +45,23 @@ pub async fn button_event_handler(
                     let num = rand::thread_rng().gen_range(1..(latest.num + 1));
                     comic(num).await
                 }
-                ButtonAction::Go { comic_num } => comic(comic_num).await
-                
+                ButtonAction::Go { comic_num } => comic(comic_num).await,
             };
+        }
+    }
+    if let Event::ReactionAdd { add_reaction } = event {
+        if add_reaction.emoji.to_string() == "❌" {
+            let mut message = add_reaction.message(ctx).await?;
+            if message.author.id == _framework.bot_id {
+                // remove buttons
+                message
+                    .edit(ctx, |edit| {
+                        edit.set_components(CreateComponents::default());
+                        edit
+                    })
+                    .await
+                    .unwrap();
+            }
         }
     }
     Ok(())
