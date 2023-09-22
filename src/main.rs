@@ -1,10 +1,9 @@
 use datetime::ISO;
 use poise::builtins::register_in_guild;
-use poise::serenity_prelude::{Button, ButtonStyle};
+use poise::serenity_prelude::{CacheHttp, EventHandler};
 use poise::{serenity_prelude as serenity, Command};
 
-use crate::comic::Comic;
-
+mod buttons;
 mod comic;
 mod command;
 
@@ -52,58 +51,13 @@ async fn main() {
         })
         .options(poise::FrameworkOptions {
             commands: commands(),
+            event_handler: |_ctx, event, _framework, _data| {
+                Box::pin(buttons::button_event_handler(
+                    _ctx, event, _framework, _data,
+                ))
+            },
             ..Default::default()
         });
 
     framework.run().await.unwrap();
-}
-
-async fn send_comic_embed(ctx: Context<'_>, comic: &Comic) {
-    ctx.send(|rep| {
-        rep.components(|comp| {
-            comp.create_action_row(|row| {
-                row.create_button(|button| {
-                    button
-                        .label("Explain")
-                        .style(ButtonStyle::Link)
-                        .url(comic.get_explain_link())
-                });
-                row.create_button(|button| {
-                    button
-                        .label("◀️")
-                        .style(ButtonStyle::Primary)
-                        .custom_id("back".to_string())
-                });
-                row.create_button(|button| {
-                    button
-                        .label("🎲")
-                        .style(ButtonStyle::Primary)
-                        .custom_id("random".to_string())
-                });
-                row.create_button(|button| {
-                    button
-                        .label("▶️")
-                        .style(ButtonStyle::Primary)
-                        .custom_id("next".to_string())
-                });
-                row
-            })
-        });
-        rep.embed(|embed| {
-            embed.title(&comic.title);
-            embed.description(format!(
-                "`#{}` - {} - [see on xkcd.com]({})",
-                &comic.num,
-                comic.get_date().iso().to_string(),
-                comic.get_comic_link()
-            ));
-            embed.image(&comic.img);
-            embed.footer(|footer| {
-                footer.text(&comic.alt);
-                footer
-            })
-        })
-    })
-    .await
-    .expect("idek anymore");
 }

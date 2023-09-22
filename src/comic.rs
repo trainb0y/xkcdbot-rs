@@ -1,7 +1,10 @@
-use datetime::{LocalDate, Month};
+use datetime::{LocalDate, Month, ISO};
+use poise::serenity_prelude::{ButtonStyle, CreateComponents, CreateEmbed, EditMessage};
+use rand::Rng;
 use serde::Deserialize;
 
-use crate::{EXPLAIN_URL, XKCD_URL};
+use crate::buttons::ButtonAction;
+use crate::{Context, EXPLAIN_URL, XKCD_URL};
 
 #[derive(Deserialize)]
 pub struct Comic {
@@ -38,7 +41,7 @@ impl Comic {
 
     async fn get(
         client: &reqwest::Client,
-        json_url: String,
+        json_url: &str,
     ) -> Result<Comic, Box<dyn std::error::Error>> {
         Ok(client
             .get(format!("{}/info.0.json", json_url))
@@ -52,10 +55,85 @@ impl Comic {
         client: &reqwest::Client,
         num: u32,
     ) -> Result<Comic, Box<dyn std::error::Error>> {
-        Comic::get(client, format!("{}/{}", XKCD_URL, num)).await
+        Comic::get(client, format!("{}/{}", XKCD_URL, num).as_str()).await
     }
 
     pub async fn get_latest(client: &reqwest::Client) -> Result<Comic, Box<dyn std::error::Error>> {
-        Comic::get(client, XKCD_URL.into()).await
+        Comic::get(client, XKCD_URL).await
+    }
+
+    fn create_buttons(&self, comp: &mut CreateComponents) {
+        comp.create_action_row(|row| {
+            row.create_button(|button| {
+                button
+                    .label("Explain")
+                    .style(ButtonStyle::Link)
+                    .url(self.get_explain_link())
+            });
+            row.create_button(|button| {
+                button.label("◀️").style(ButtonStyle::Primary).custom_id(
+                    serde_json::to_string(&ButtonAction::Go {
+                        comic_num: self.num - 1,
+                    })
+                    .unwrap(),
+                )
+            });
+            row.create_button(|button| {
+                button
+                    .label("🎲")
+                    .style(ButtonStyle::Primary)
+                    .custom_id(serde_json::to_string(&ButtonAction::Random).unwrap())
+            });
+            row.create_button(|button| {
+                button.label("▶️").style(ButtonStyle::Primary).custom_id(
+                    serde_json::to_string(&ButtonAction::Go {
+                        comic_num: self.num + 1,
+                    })
+                    .unwrap(),
+                )
+            });
+            row
+        });
+    }
+
+    fn create_embed(&self, embed: &mut CreateEmbed) {
+        embed.title(&self.title);
+        embed.description(format!(
+            "`#{}` - {} - [see on xkcd.com]({})",
+            &self.num,
+            self.get_date().iso().to_string(),
+            self.get_comic_link()
+        ));
+        embed.image(&self.img);
+        embed.footer(|footer| {
+            footer.text(&self.alt);
+            footer
+        });
+    }
+
+    pub async fn send_comic_embed(&self, ctx: Context<'_>) {
+        ctx.send(|rep| {
+            rep.components(|comp| {
+                self.create_buttons(comp);
+                comp
+            });
+            rep.embed(|embed| {
+                self.create_embed(embed);
+                embed
+            })
+        })
+        .await
+        .expect("idek anymore todo make better");
+    }
+
+    pub fn edit_in_message(&self, message: &mut EditMessage<'_>) {
+        message.components(|comp| {
+            self.create_buttons(comp);
+            comp
+        });
+        message.embed(|embed| {
+            self.create_embed(embed);
+            embed
+        });
     }
 }
