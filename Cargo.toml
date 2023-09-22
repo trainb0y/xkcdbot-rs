@@ -6,9 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-poise = "0.5.5"
-tokio = {"version" = "1.28.2", features = ["rt-multi-thread"]}
-serde = { version = "1.0.163", features = ["derive"] }
-reqwest = { version = "0.11.17", features = ["json"] }
-datetime = "0.5.2"
-rand = "0.8.5"
+poise = "0.5"
+tokio = {"version" = "1.32", features = ["rt-multi-thread"]}
+serde = { version = "1.0", features = ["derive"] }
+reqwest = { version = "0.11", features = ["json"] }
+datetime = "0.5"
+rand = "0.8"
