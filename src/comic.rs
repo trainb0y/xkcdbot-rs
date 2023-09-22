@@ -1,6 +1,5 @@
 use datetime::{LocalDate, Month, ISO};
 use poise::serenity_prelude::{ButtonStyle, CreateComponents, CreateEmbed, EditMessage};
-use rand::Rng;
 use serde::Deserialize;
 
 use crate::buttons::ButtonAction;
@@ -101,7 +100,7 @@ impl Comic {
         embed.description(format!(
             "`#{}` - {} - [see on xkcd.com]({})",
             &self.num,
-            self.get_date().iso().to_string(),
+            self.get_date().iso(),
             self.get_comic_link()
         ));
         embed.image(&self.img);
@@ -123,7 +122,7 @@ impl Comic {
             })
         })
         .await
-        .expect("idek anymore todo make better");
+        .unwrap();
     }
 
     pub fn edit_in_message(&self, message: &mut EditMessage<'_>) {

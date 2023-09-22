@@ -1,15 +1,8 @@
-use datetime::ISO;
+use poise::serenity_prelude::ButtonStyle;
 use rand::Rng;
 
 use crate::comic::Comic;
 use crate::{Context, Error};
-
-/// Is the bot even alive?
-#[poise::command(slash_command)]
-pub async fn ping(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say("Pong!").await?;
-    Ok(())
-}
 
 /// Help and documentation
 #[poise::command(slash_command)]
@@ -18,7 +11,24 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
     ctx.send(|rep| {
         rep.embed(|embed| {
             embed.title("xkcd bot help");
-            embed.description("I cannot help you");
+            embed.field(
+                "Commands",
+                "
+            `/help`         - Display this message
+            `/about`        - Display uptime, version, and links
+            `/xkcd random`  - Get a random xkcd
+            `/xkcd get <n>` - Get a comic by number
+            ",
+                false,
+            );
+            embed.field(
+                "Tips",
+                "
+            React with :x: to remove buttons
+            
+            ",
+                false,
+            );
             embed
         });
         rep
@@ -30,7 +40,41 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
 /// Bug reporting, source code, and more
 #[poise::command(slash_command)]
 pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
-    ctx.say("todo").await?;
+    ctx.defer_ephemeral().await?;
+    ctx.send(|rep| {
+        rep.embed(|embed| {
+            embed.title("About xkcd bot");
+            embed.field("Version", env!("CARGO_PKG_VERSION"), true);
+            embed.field("Uptime", "forever", true);
+            embed.field(
+                "About",
+                "xkcd bot - a bot for Randall Munroe's [xkcd](https://xkcd.com)\
+                Comics under [CC BY-NC 2.5](https://creativecommons.org/licenses/by-nc/2.5/)",
+                false,
+            );
+            embed
+        });
+        rep.components(|components| {
+            components.create_action_row(|row| {
+                row.create_button(|button| {
+                    button.label("Source Code");
+                    button.style(ButtonStyle::Link);
+                    button.url(env!("CARGO_PKG_REPOSITORY"));
+                    button
+                });
+                row.create_button(|button| {
+                    button.label("Report an Issue");
+                    button.style(ButtonStyle::Link);
+                    button.url(format!("{}/issues", env!("CARGO_PKG_REPOSITORY")));
+                    button
+                });
+                row
+            });
+            components
+        });
+        rep
+    })
+    .await?;
     Ok(())
 }
 
@@ -40,7 +84,7 @@ pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
     required_permissions = "EMBED_LINKS",
     subcommands("get", "latest", "random")
 )]
-pub async fn xkcd(ctx: Context<'_>) -> Result<(), Error> {
+pub async fn xkcd(_: Context<'_>) -> Result<(), Error> {
     Ok(())
 }
 
