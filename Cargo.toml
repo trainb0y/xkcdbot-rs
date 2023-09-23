@@ -12,6 +12,6 @@ poise = "0.5"
 tokio = {"version" = "1.32", features = ["rt-multi-thread"]}
 serde = { version = "1.0", features = ["derive"] }
 reqwest = { version = "0.11", features = ["json"] }
-datetime = "0.5"
+chrono = "0.4"
 rand = "0.8"
-serde_json = "1.0.97"
+serde_json = "1.0"

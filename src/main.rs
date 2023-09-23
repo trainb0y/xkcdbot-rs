@@ -1,4 +1,4 @@
-use datetime::ISO;
+use chrono::{DateTime, Utc};
 use poise::builtins::register_in_guild;
 use poise::serenity_prelude::{CacheHttp, EventHandler};
 use poise::{serenity_prelude as serenity, Command};
@@ -9,6 +9,7 @@ mod command;
 
 pub struct Data {
     client: reqwest::Client,
+    start_time: DateTime<Utc>,
 }
 
 type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -41,6 +42,7 @@ async fn main() {
 
                 Ok(Data {
                     client: reqwest::Client::new(),
+                    start_time: Utc::now(),
                 })
             })
         })

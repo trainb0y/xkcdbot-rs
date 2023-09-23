@@ -1,3 +1,4 @@
+use chrono::{Timelike, Utc};
 use poise::serenity_prelude::ButtonStyle;
 use rand::Rng;
 
@@ -45,11 +46,15 @@ pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
         rep.embed(|embed| {
             embed.title("About xkcd bot");
             embed.field("Version", env!("CARGO_PKG_VERSION"), true);
-            embed.field("Uptime", "forever", true);
+            embed.field(
+                "Uptime",
+                format!("<t:{}:R>", ctx.data().start_time.timestamp()),
+                true,
+            );
             embed.field(
                 "About",
-                "xkcd bot - a bot for Randall Munroe's [xkcd](https://xkcd.com)\
-                Comics under [CC BY-NC 2.5](https://creativecommons.org/licenses/by-nc/2.5/)",
+                "xkcd bot - a bot for Randall Munroe's [xkcd](https://xkcd.com)
+                (Comics under [CC BY-NC 2.5](https://creativecommons.org/licenses/by-nc/2.5/))",
                 false,
             );
             embed

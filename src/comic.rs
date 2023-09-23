@@ -1,4 +1,4 @@
-use datetime::{LocalDate, Month, ISO};
+use chrono::{DateTime, NaiveDate, TimeZone, Utc};
 use poise::serenity_prelude::{ButtonStyle, CreateComponents, CreateEmbed, EditMessage};
 use serde::Deserialize;
 
@@ -28,12 +28,12 @@ impl Comic {
         format!("{}/{}", EXPLAIN_URL, self.num)
     }
 
-    pub fn get_date(&self) -> LocalDate {
+    pub fn get_date(&self) -> NaiveDate {
         // this is cringe and should get cleaned up
-        LocalDate::ymd(
-            self.year.parse::<i64>().unwrap(),
-            Month::from_one(self.month.parse::<i8>().unwrap()).unwrap(),
-            self.day.parse::<i8>().unwrap(),
+        NaiveDate::from_ymd_opt(
+            self.year.parse::<i32>().unwrap(),
+            self.month.parse::<u32>().unwrap(),
+            self.day.parse::<u32>().unwrap(),
         )
         .unwrap()
     }
@@ -100,7 +100,7 @@ impl Comic {
         embed.description(format!(
             "`#{}` - {} - [see on xkcd.com]({})",
             &self.num,
-            self.get_date().iso(),
+            self.get_date(),
             self.get_comic_link()
         ));
         embed.image(&self.img);
