@@ -1,5 +1,9 @@
 use chrono::{DateTime, NaiveDate, TimeZone, Utc};
-use poise::serenity_prelude::{ButtonStyle, CreateComponents, CreateEmbed, EditMessage};
+use poise::serenity_prelude::{
+    ButtonStyle, CreateActionRow, CreateButton, CreateEmbed, CreateEmbedFooter, CreateMessage,
+    EditMessage,
+};
+use poise::CreateReply;
 use serde::Deserialize;
 
 use crate::buttons::ButtonAction;
@@ -35,7 +39,7 @@ impl Comic {
             self.month.parse::<u32>().unwrap(),
             self.day.parse::<u32>().unwrap(),
         )
-        .unwrap()
+            .unwrap()
     }
 
     async fn get(
@@ -61,78 +65,59 @@ impl Comic {
         Comic::get(client, XKCD_URL).await
     }
 
-    fn create_buttons(&self, comp: &mut CreateComponents) {
-        comp.create_action_row(|row| {
-            row.create_button(|button| {
-                button
-                    .label("Explain")
-                    .style(ButtonStyle::Link)
-                    .url(self.get_explain_link())
-            });
-            row.create_button(|button| {
-                button.label("◀️").style(ButtonStyle::Primary).custom_id(
-                    serde_json::to_string(&ButtonAction::Go {
-                        comic_num: self.num - 1,
-                    })
+    fn create_actions(&self) -> CreateActionRow {
+        CreateActionRow::Buttons(vec![
+            CreateButton::new_link(self.get_explain_link())
+                .label("Explain")
+                .style(ButtonStyle::Secondary),
+            CreateButton::new(
+                serde_json::to_string(&ButtonAction::Go {
+                    comic_num: self.num - 1,
+                })
                     .unwrap(),
-                )
-            });
-            row.create_button(|button| {
-                button
-                    .label("🎲")
-                    .style(ButtonStyle::Primary)
-                    .custom_id(serde_json::to_string(&ButtonAction::Random).unwrap())
-            });
-            row.create_button(|button| {
-                button.label("▶️").style(ButtonStyle::Primary).custom_id(
-                    serde_json::to_string(&ButtonAction::Go {
-                        comic_num: self.num + 1,
-                    })
+            )
+                .label("◀️")
+                .style(ButtonStyle::Primary),
+            CreateButton::new(serde_json::to_string(&ButtonAction::Random).unwrap())
+                .label("🎲")
+                .style(ButtonStyle::Primary),
+            CreateButton::new(
+                serde_json::to_string(&ButtonAction::Go {
+                    comic_num: self.num + 1,
+                })
                     .unwrap(),
-                )
-            });
-            row
-        });
+            )
+                .label("▶️")
+                .style(ButtonStyle::Primary),
+        ])
     }
 
-    fn create_embed(&self, embed: &mut CreateEmbed) {
-        embed.title(&self.title);
-        embed.description(format!(
-            "`#{}` - {} - [see on xkcd.com]({})",
-            &self.num,
-            self.get_date(),
-            self.get_comic_link()
-        ));
-        embed.image(&self.img);
-        embed.footer(|footer| {
-            footer.text(&self.alt);
-            footer
-        });
+    fn create_embed(&self) -> CreateEmbed {
+        CreateEmbed::new()
+            .title(&self.title)
+            .description(format!(
+                "`#{}` - {} - [see on xkcd.com]({})",
+                &self.num,
+                self.get_date(),
+                self.get_comic_link()
+            ))
+            .image(&self.img)
+            .footer(CreateEmbedFooter::new(&self.alt))
     }
 
     pub async fn send_comic_embed(&self, ctx: Context<'_>) {
-        ctx.send(|rep| {
-            rep.components(|comp| {
-                self.create_buttons(comp);
-                comp
-            });
-            rep.embed(|embed| {
-                self.create_embed(embed);
-                embed
-            })
-        })
-        .await
-        .unwrap();
+        ctx.send(
+            CreateReply::default()
+                .components(vec![self.create_actions()])
+                .embed(self.create_embed()),
+        )
+            .await
+            .unwrap();
     }
 
-    pub fn edit_in_message(&self, message: &mut EditMessage<'_>) {
-        message.components(|comp| {
-            self.create_buttons(comp);
-            comp
-        });
-        message.embed(|embed| {
-            self.create_embed(embed);
-            embed
-        });
+    pub fn edit_message(&self) -> EditMessage {
+        EditMessage::new()
+            .components(vec![self.create_actions()])
+            .embed(self.create_embed())
     }
 }

@@ -1,5 +1,5 @@
-use chrono::{Timelike, Utc};
-use poise::serenity_prelude::ButtonStyle;
+use poise::serenity_prelude::{ButtonStyle, CreateActionRow, CreateButton, CreateEmbed};
+use poise::CreateReply;
 use rand::Rng;
 
 use crate::comic::Comic;
@@ -9,31 +9,29 @@ use crate::{Context, Error};
 #[poise::command(slash_command)]
 pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer_ephemeral().await?;
-    ctx.send(|rep| {
-        rep.embed(|embed| {
-            embed.title("xkcd bot help");
-            embed.field(
-                "Commands",
-                "
-            `/help`         - Display this message
-            `/about`        - Display uptime, version, and links
-            `/xkcd random`  - Get a random xkcd
-            `/xkcd get <n>` - Get a comic by number
-            ",
-                false,
-            );
-            embed.field(
-                "Tips",
-                "
-            React with :x: to remove buttons
-            
-            ",
-                false,
-            );
-            embed
-        });
-        rep
-    })
+    ctx.send(
+        CreateReply::default().embed(
+            CreateEmbed::new()
+                .title("xkcd bot help")
+                .field(
+                    "Commands",
+                    "
+                `/help`         - Display this message
+                `/about`        - Display uptime, version, and links
+                `/xkcd random`  - Get a random xkcd
+                `/xkcd get <n>` - Get a comic by number
+                ",
+                    false,
+                )
+                .field(
+                    "Tips",
+                    "
+                React with :x: to remove buttons
+                ",
+                    false,
+                ),
+        ),
+    )
     .await?;
     Ok(())
 }
@@ -42,43 +40,33 @@ pub async fn help(ctx: Context<'_>) -> Result<(), Error> {
 #[poise::command(slash_command)]
 pub async fn about(ctx: Context<'_>) -> Result<(), Error> {
     ctx.defer_ephemeral().await?;
-    ctx.send(|rep| {
-        rep.embed(|embed| {
-            embed.title("About xkcd bot");
-            embed.field("Version", env!("CARGO_PKG_VERSION"), true);
-            embed.field(
-                "Uptime",
-                format!("<t:{}:R>", ctx.data().start_time.timestamp()),
-                true,
-            );
-            embed.field(
-                "About",
-                "xkcd bot - a bot for Randall Munroe's [xkcd](https://xkcd.com)
+    ctx.send(
+        CreateReply::default()
+            .embed(
+                CreateEmbed::new()
+                    .title("About xkcd bot")
+                    .field("Version", env!("CARGO_PKG_VERSION"), true)
+                    .field(
+                        "Uptime",
+                        format!("<t:{}:R>", ctx.data().start_time.timestamp()),
+                        true,
+                    )
+                    .field(
+                        "About",
+                        "xkcd bot - a bot for Randall Munroe's [xkcd](https://xkcd.com)
                 (Comics under [CC BY-NC 2.5](https://creativecommons.org/licenses/by-nc/2.5/))",
-                false,
-            );
-            embed
-        });
-        rep.components(|components| {
-            components.create_action_row(|row| {
-                row.create_button(|button| {
-                    button.label("Source Code");
-                    button.style(ButtonStyle::Link);
-                    button.url(env!("CARGO_PKG_REPOSITORY"));
-                    button
-                });
-                row.create_button(|button| {
-                    button.label("Report an Issue");
-                    button.style(ButtonStyle::Link);
-                    button.url(format!("{}/issues", env!("CARGO_PKG_REPOSITORY")));
-                    button
-                });
-                row
-            });
-            components
-        });
-        rep
-    })
+                        false,
+                    ),
+            )
+            .components(vec![CreateActionRow::Buttons(vec![
+                CreateButton::new_link(env!("CARGO_PKG_REPOSITORY"))
+                    .label("Source Code")
+                    .style(ButtonStyle::Secondary),
+                CreateButton::new_link(format!("{}/issues", env!("CARGO_PKG_REPOSITORY")))
+                    .label("Report an Issue")
+                    .style(ButtonStyle::Secondary),
+            ])]),
+    )
     .await?;
     Ok(())
 }

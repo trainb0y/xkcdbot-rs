@@ -1,4 +1,5 @@
 use chrono::{DateTime, Utc};
+use poise::builtins::register_globally;
 use poise::builtins::register_in_guild;
 use poise::serenity_prelude::{CacheHttp, EventHandler};
 use poise::{serenity_prelude as serenity, Command};
@@ -25,10 +26,19 @@ fn commands() -> Vec<Command<Data, Error>> {
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
+
     let framework = poise::Framework::builder()
-        .token(std::env::var("TOKEN").expect("missing TOKEN env var"))
-        .intents(serenity::GatewayIntents::non_privileged())
-        .setup(|ctx, _ready, framework| {
+        .options(poise::FrameworkOptions {
+            commands: commands(),
+            event_handler: |_ctx, event, _framework, _data| {
+                Box::pin(buttons::button_event_handler(
+                    _ctx, event, _framework, _data,
+                ))
+            },
+            ..Default::default()
+        })
+        .setup(|ctx, _ready, _framework| {
             Box::pin(async move {
                 // run when bot connects to discord
                 if let Ok(guild_id) = std::env::var("TEST_GUILD") {
@@ -40,21 +50,23 @@ async fn main() {
                     register_in_guild(ctx, &commands(), guild).await?;
                 };
 
+                register_globally(ctx, &commands()).await.unwrap();
+
                 Ok(Data {
                     client: reqwest::Client::new(),
                     start_time: Utc::now(),
                 })
             })
         })
-        .options(poise::FrameworkOptions {
-            commands: commands(),
-            event_handler: |_ctx, event, _framework, _data| {
-                Box::pin(buttons::button_event_handler(
-                    _ctx, event, _framework, _data,
-                ))
-            },
-            ..Default::default()
-        });
+        .build();
 
-    framework.run().await.unwrap();
+    let mut client = serenity::ClientBuilder::new(
+        std::env::var("TOKEN").expect("missing TOKEN env var"),
+        serenity::GatewayIntents::non_privileged(),
+    )
+        .framework(framework)
+        .await
+        .unwrap();
+
+    client.start().await.unwrap()
 }
